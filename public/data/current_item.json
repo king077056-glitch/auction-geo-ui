@@ -1,0 +1,19 @@
+{
+  "itemName": "아디다스 M.W.N.D. Jkt PB 윈드브레이커",
+  "grade": "B",
+  "currentMarketPrice": "89,000",
+  "recommendedStartPrice": "35,000",
+  "aiAnalysisText": "아디다스 프라임블루 친환경 소재 윈드브레이커입니다. 시물 정밀 분석 결과, 목 부위 및 소매 끝에 미세한 사용감이 발견되어 'B등급' 판정을 내렸습니다. 5대 플랫폼(KREAM, 중고나라 등) 실시간 시세 분석을 통해 산출된 시작가는 35,000원입니다. 현재 경쟁이 매우 활발합니다.",
+  "marketComparison": "KREAM/중고나라/번개장터/당근마켓/옥션 데이터 교차 검증 완료.",
+  "lastUpdated": "2026-03-14 00:30:00",
+  "imageName": "adidas_front.jpg",
+  "imagePath": "/data/adidas_front.jpg",
+  "images": [
+    "/data/adidas_front.jpg",
+    "/data/adidas_back.png",
+    "/data/adidas_logo_detail.png",
+    "/data/adidas_tag_1.png",
+    "/data/adidas_tag_2.png"
+  ],
+  "currentBid": 35000
+}

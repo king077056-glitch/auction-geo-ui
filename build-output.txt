@@ -1,0 +1,7 @@
+﻿
+> 04-ui@0.0.0 build
+> vite build --emptyOutDir
+
+vite v7.3.1 building client environment for production...
+transforming...
+??428 modules transformed.
