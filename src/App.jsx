@@ -14,7 +14,7 @@ const initKakao = () => {
   return false;
 };
 
-const DEPLOY_URL = 'https://jovial-truffle-51a539.netlify.app';
+const DEPLOY_URL = 'https://delightful-crepe-f194c6.netlify.app';
 
 const shareToKakao = () => {
   initKakao();
@@ -24,7 +24,7 @@ const shareToKakao = () => {
       content: {
         title: '경매지오 - AI 정밀 시세 리포트',
         description: '당신만의 가치를 만나는 AI 경매 공간',
-        imageUrl: 'https://jovial-truffle-51a539.netlify.app/data/adidas_front.jpg',
+        imageUrl: 'https://delightful-crepe-f194c6.netlify.app/data/adidas_front.png',
         link: { mobileWebUrl: DEPLOY_URL, webUrl: DEPLOY_URL },
       },
       buttons: [{ title: '앱으로 이동', link: { mobileWebUrl: DEPLOY_URL } }],
@@ -265,8 +265,11 @@ function App() {
     }
     if (navigator.vibrate) navigator.vibrate(10);
     setIsProcessing(true);
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
     setTimeout(() => {
       setCurrentBid(bidVal);
+      setBidHistory((prev) => [{ bidder: '나', price: bidVal, time: timeStr }, ...prev].slice(0, 10));
       addLog(`사용자: ${formatPrice(bidVal)} 입찰 성공!`);
       setUserBidAmt('');
       setIsProcessing(false);
@@ -357,6 +360,14 @@ function App() {
                     <>
                       <div className="scan-line" />
                       <div className="scan-overlay" />
+                      <motion.div
+                        className="analyzing-badge"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        AI 정밀 분석 중...
+                      </motion.div>
                     </>
                   )}
                 </>
@@ -385,7 +396,7 @@ function App() {
                   animate={{ opacity: [0.4, 1, 0.4] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  이미지 분석 중...
+                  AI 정밀 분석 중...
                 </motion.div>
               )}
               {(itemData.images?.length > 0 || itemData.imagePath || uploadedImageUrl) && !isAnalyzing && (
