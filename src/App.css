@@ -71,10 +71,23 @@ body {
   border: 1px solid var(--border);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
 }
 
+.glass-card .label,
+.glass-card .price-text,
+.glass-card .time-text,
+.glass-card .product-title,
+.glass-card .stat-value,
+.glass-card .stat-label,
+.glass-card .ai-message,
+.glass-card .history-user,
+.glass-card .history-price,
+.glass-card .history-time,
+.glass-card .slogan-main { color: #ffffff; }
+
 .glass-premium {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(30, 41, 59, 0.7);
   border: 1px solid var(--glass-border);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.1),
@@ -556,8 +569,10 @@ body {
 
 /* CTA 카드 (하이테크 스타일) */
 .cta-card {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.08) 100%);
-  border: 1px solid var(--glass-border);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(49, 46, 129, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  cursor: pointer;
 }
 
 .cta-header {
@@ -575,14 +590,14 @@ body {
 .cta-title {
   font-size: 16px;
   font-weight: 800;
-  color: var(--dark-bg);
+  color: #ffffff;
   letter-spacing: -0.5px;
 }
 
 .cta-text {
   font-size: 14px;
   line-height: 1.6;
-  color: #475569;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -684,6 +699,6 @@ body {
 
 .engine-logs {
   font-size: 11px;
-  color: #94a3b8;
+  color: #ffffff;
   padding: 10px;
 }

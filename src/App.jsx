@@ -577,6 +577,7 @@ function App() {
             className="glass-card cta-card glass-premium"
             variants={itemVariants}
             whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
+            onClick={() => fileInputRef.current?.click()}
           >
             <div className="cta-header">
               <span className="cta-icon">◆</span>
