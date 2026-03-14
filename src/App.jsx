@@ -484,6 +484,8 @@ function App() {
           <motion.section
             className="glass-card glass-premium bid-input-area"
             variants={itemVariants}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
           >
             <span className="label">경매 입찰 참여하기</span>
@@ -510,6 +512,8 @@ function App() {
           <motion.section
             className="glass-card glass-premium ai-insight-box"
             variants={itemVariants}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
           >
             <div className="slogan-main">AI가 분석한 정밀 시세 리포트</div>
@@ -551,6 +555,8 @@ function App() {
           <motion.section
             className="glass-card glass-premium"
             variants={itemVariants}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
           >
             <div className="label">실시간 입찰 내역</div>

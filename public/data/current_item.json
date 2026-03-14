@@ -7,13 +7,13 @@
   "marketComparison": "KREAM/중고나라/번개장터/당근마켓/옥션 데이터 교차 검증 완료.",
   "lastUpdated": "2026-03-14 00:30:00",
   "imageName": "adidas_front.png",
-  "imagePath": "/data/adidas_front.png",
+  "imagePath": "./data/adidas_front.png",
   "images": [
-    "/data/adidas_front.png",
-    "/data/adidas_back.png",
-    "/data/adidas_logo_detail.png",
-    "/data/adidas_tag_1.png",
-    "/data/adidas_tag_2.png"
+    "./data/adidas_front.png",
+    "./data/adidas_back.png",
+    "./data/adidas_logo_detail.png",
+    "./data/adidas_tag_1.png",
+    "./data/adidas_tag_2.png"
   ],
   "currentBid": 35000
 }
