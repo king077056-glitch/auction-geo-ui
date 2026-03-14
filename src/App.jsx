@@ -3,14 +3,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
+// ===== AI 감정 및 시세 로직 =====
 const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY || '';
 const DEPLOY_URL = 'https://auction-geo-ui.vercel.app'; 
 
 const GRADE_CONFIG = {
-  A: { label: '신품급 (Near Mint)', stars: '⭐⭐⭐⭐⭐', color: '#10b981', basePrice: 120000 },
-  B: { label: '우수 (Very Good)', stars: '⭐⭐⭐⭐', color: '#8b5cf6', basePrice: 65000 },
-  C: { label: '보통 (Good)', stars: '⭐⭐⭐', color: '#f59e0b', basePrice: 38000 },
-  D: { label: '하급 (Poor)', stars: '⭐⭐', color: '#64748b', basePrice: 22000 }
+  A: { label: '신품급 (Near Mint)', stars: '⭐⭐⭐⭐⭐', color: '#10b981', basePrice: 120000, desc: '사용감이 거의 없는 최상급 상태' },
+  B: { label: '우수 (Very Good)', stars: '⭐⭐⭐⭐', color: '#8b5cf6', basePrice: 65000, desc: '미세한 사용감 외 완벽한 보존 상태' },
+  C: { label: '보통 (Good)', stars: '⭐⭐⭐', color: '#f59e0b', basePrice: 38000, desc: '자연스러운 사용감이 느껴지는 제품' },
+  D: { label: '하급 (Poor)', stars: '⭐⭐', color: '#64748b', basePrice: 22000, desc: '수선이 필요하거나 사용감이 많은 제품' }
 };
 
 const formatPrice = (price) => {
@@ -18,6 +19,7 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 }).format(numericPrice || 0);
 };
 
+// 샘플 이미지 리스트
 const SAMPLE_IMAGES = [
   '/data/adidas_front.jpg',
   '/data/adidas_back.jpg',
@@ -26,11 +28,27 @@ const SAMPLE_IMAGES = [
   '/data/adidas_tag_2.jpg'
 ];
 
+// ===== Sub-Components =====
+const GlassSection = ({ title, children, delay = 0 }) => (
+  <motion.section 
+    className="glass-section"
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ delay }}
+  >
+    {title && <h3 className="section-title">{title}</h3>}
+    {children}
+  </motion.section>
+);
+
 function App() {
   const [itemData, setItemData] = useState({
     itemName: '아디다스 빈티지 윈드브레이커',
     grade: 'B',
     currentMarketPrice: 85000,
+    recommendedStartPrice: 45000,
+    aiAnalysisText: 'AI가 아디다스 빈티지 라인의 특성을 완벽히 인식했습니다. 로고 자수 상태가 우수하며, 시보리 늘어남이 적어 상급 컨디션으로 정밀 판독되었습니다. 특히 지퍼 헤드의 각인이 선명하여 정품 인증 98% 확률을 기록했습니다.',
     images: SAMPLE_IMAGES
   });
 
@@ -38,10 +56,16 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [displayGrade, setDisplayGrade] = useState('B');
   const [currentBid, setCurrentBid] = useState(52000);
+  const [bidHistory, setBidHistory] = useState([
+    { bidder: 'Collector_K', price: 51200, time: '2분 전' },
+    { bidder: 'VintageLover', price: 49000, time: '5분 전' },
+    { bidder: 'AdidasMania', price: 45000, time: '12분 전' }
+  ]);
   const [userBidAmt, setUserBidAmt] = useState('');
-  const [logs, setLogs] = useState(['시스템: 경매지오 AI 엔진 정상 가동']);
+  const [logs, setLogs] = useState(['시스템: 경매장터 AI 엔진 정상 가동 중']);
   const fileInputRef = useRef(null);
 
+  // 카카오톡 초기화
   useEffect(() => {
     if (window.Kakao && !window.Kakao.isInitialized() && KAKAO_JS_KEY) {
       window.Kakao.init(KAKAO_JS_KEY);
@@ -50,107 +74,204 @@ function App() {
 
   const shareKakao = () => {
     if (!window.Kakao) return alert('카카오 SDK 로드 중...');
-    window.Kakao.Share.sendDefault({
-      objectType: 'feed',
-      content: {
-        title: '🎁 [경매지오] 대표님의 특별한 선물',
-        description: 'AI가 실시간으로 감정하는 프리미엄 경매 플랫폼!',
-        imageUrl: window.location.origin + itemData.images[0],
-        link: { mobileWebUrl: DEPLOY_URL, webUrl: DEPLOY_URL },
-      },
-      buttons: [{ title: '앱으로 보기', link: { mobileWebUrl: DEPLOY_URL, webUrl: DEPLOY_URL } }],
-    });
+    try {
+      window.Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: '🎁 [경매장터] 대표님의 특별한 초대',
+          description: 'AI가 감정하는 프리미엄 미공개 경매 플랫폼! 지금 입찰해보세요.',
+          imageUrl: window.location.origin + SAMPLE_IMAGES[0],
+          link: { mobileWebUrl: DEPLOY_URL, webUrl: DEPLOY_URL },
+        },
+        buttons: [{ title: '입찰하러 가기', link: { mobileWebUrl: DEPLOY_URL, webUrl: DEPLOY_URL } }],
+      });
+    } catch (e) {
+      alert('카카오 공유 중 오류가 발생했습니다.');
+    }
+  };
+
+  const addLog = useCallback((msg) => {
+    setLogs((prev) => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev].slice(0, 5));
+  }, []);
+
+  const runAIAnalysis = (file) => {
+    if (!file) return;
+    setIsAnalyzing(true);
+    const url = URL.createObjectURL(file);
+    addLog('AI: 고해상도 이미지 매트릭스 분석 중...');
+    
+    let count = 0;
+    const interval = setInterval(() => {
+      setDisplayGrade(['A','B','C','D'][count % 4]);
+      count++;
+    }, 150);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      const finalGrade = 'A';
+      setItemData(prev => ({
+        ...prev,
+        itemName: '정밀 감정 완료 상품',
+        grade: finalGrade,
+        currentMarketPrice: 156000,
+        aiAnalysisText: `[AI 정밀 판독 결과] 해당 제품은 ${GRADE_CONFIG[finalGrade].label} 상태로 확인되었습니다. 실시간 글로벌 빈티지 DB 대조 결과, 보존 가치가 매우 높습니다. 자수 밀도와 소재 질감이 90년대 정규 발매 모델과 정확히 일치합니다.`,
+        images: [url, ...prev.images]
+      }));
+      setActiveImgIdx(0);
+      setIsAnalyzing(false);
+      addLog(`결과: AI 정밀 감정 ${finalGrade}등급 확정`);
+      alert('AI 정밀 감정 완료! 프리미엄 매물로 등록되었습니다.');
+    }, 3500);
   };
 
   const handleBid = () => {
     const val = parseInt(userBidAmt.replace(/,/g, ''));
     if (!val || val <= currentBid) return alert('현재가보다 높은 금액을 입력해주세요.');
+    
     setCurrentBid(val);
+    setBidHistory([{ bidder: '나', price: val, time: '방금 전' }, ...bidHistory]);
     setUserBidAmt('');
-    setLogs(prev => [`[${new Date().toLocaleTimeString()}] 입찰 성공: ${formatPrice(val)}`, ...prev]);
-  };
-
-  const runAnalysis = (file) => {
-    if (!file) return;
-    setIsAnalyzing(true);
-    const url = URL.createObjectURL(file);
-    setTimeout(() => {
-      setItemData(prev => ({ ...prev, images: [url, ...prev.images], grade: 'A' }));
-      setIsAnalyzing(false);
-      alert('AI 정밀 감정 완료!');
-    }, 2500);
+    addLog(`입찰: ${formatPrice(val)} 성공`);
   };
 
   return (
-    <div className="app-container">
-      <header className="glass header">
-        <h1 className="logo-geo">경매지오</h1>
-        <div className="status-badge">LIVE 경매중</div>
+    <div className="premium-app">
+      {/* 1단계: 헤더 & 히어로 갤러리 */}
+      <header className="main-header glass">
+        <div className="nav-container">
+          <div className="brand-group">
+            <h1 className="main-logo">경매장터</h1>
+            <div className="live-status">
+              <span className="dot"></span> LIVE
+            </div>
+          </div>
+          <button className="btn-upload-top" onClick={() => fileInputRef.current.click()}>
+            <span className="icon">📸</span> AI 감정
+          </button>
+          <input type="file" ref={fileInputRef} hidden onChange={(e) => runAIAnalysis(e.target.files[0])} />
+        </div>
       </header>
 
-      <main className="content">
-        <section className="glass gallery-box">
-          <div className="main-frame">
-            <img src={itemData.images[activeImgIdx]} className="full-img" alt="item" />
-            {isAnalyzing && <div className="scanning-bar" />}
+      <main className="scroll-content">
+        {/* Page 1: Product Showcase */}
+        <section className="product-hero">
+          <div className={`hero-frame glass ${isAnalyzing ? 'analyzing' : ''}`}>
+            <AnimatePresence mode="wait">
+              <motion.img 
+                key={activeImgIdx}
+                src={itemData.images[activeImgIdx]} 
+                className="hero-img" 
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.4 }}
+              />
+            </AnimatePresence>
+            {isAnalyzing && <div className="scanning-line" />}
+            {isAnalyzing && <div className="analyzing-text">AI 딥러닝 분석 중...</div>}
+            <div className="grade-overlay">
+               {isAnalyzing ? displayGrade : itemData.grade}<span>Grade</span>
+            </div>
           </div>
-          <div className="thumb-row">
+          <div className="thumb-navbar">
             {itemData.images.slice(0, 5).map((img, i) => (
-              <div key={i} className={`thumb ${activeImgIdx === i ? 'on' : ''}`} onClick={() => setActiveImgIdx(i)}>
+              <motion.div 
+                key={i} 
+                className={`thumb-box ${activeImgIdx === i ? 'active' : ''}`}
+                onClick={() => setActiveImgIdx(i)}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.9 }}
+              >
                 <img src={img} alt="thumb" />
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
 
-        <section className="product-meta">
-          <div className="title-bar">
-            <h2>{itemData.itemName}</h2>
-            <span className={`grade g-${itemData.grade}`}>{itemData.grade}등급</span>
-          </div>
-          <div className="price-cards">
-            <div className="glass card">
-              <span className="cap">현재 최고가</span>
-              <div className="val highlight">{formatPrice(currentBid)}</div>
-            </div>
-            <div className="glass card">
-              <span className="cap">남은 시간</span>
-              <div className="val">00:15:32</div>
-            </div>
-          </div>
-        </section>
+        {/* Page 2: Item Info & Action */}
+        <div className="info-grid">
+           <GlassSection>
+              <div className="item-meta">
+                 <h2 className="item-title">{itemData.itemName}</h2>
+                 <p className="item-desc">#아디다스 #빈티지 #정품인증 #AI감정</p>
+                 <div className="star-row">
+                    {GRADE_CONFIG[itemData.grade].stars}
+                    <span className="grade-txt">{GRADE_CONFIG[itemData.grade].label}</span>
+                 </div>
+              </div>
+           </GlassSection>
 
-        <section className="glass bid-box">
-          <input 
-            className="bid-input" 
-            placeholder="입찰 금액 입력" 
-            value={userBidAmt} 
-            onChange={(e) => setUserBidAmt(e.target.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ","))} 
-          />
-          <button className="btn-bid" onClick={handleBid}>입찰하기</button>
-        </section>
+           <div className="price-row">
+              <div className="glass-card price-main">
+                 <span className="cap">현재 최고 입찰가</span>
+                 <div className="val accent">{formatPrice(currentBid)}</div>
+              </div>
+              <div className="glass-card timer-main">
+                 <span className="cap">경매 종료까지</span>
+                 <div className="val timer">00:15:32</div>
+              </div>
+           </div>
 
-        <section className="glass ai-report">
-          <div className="rep-head">
-            <h3>AI 정밀 분석 리포트</h3>
-            <button className="btn-upload" onClick={() => fileInputRef.current.click()}>사진 업로드</button>
-            <input type="file" ref={fileInputRef} hidden onChange={(e) => runAnalysis(e.target.files[0])} />
-          </div>
-          <p className="rep-body">해당 제품은 AI 판독 결과 {GRADE_CONFIG[itemData.grade].label} 상태입니다. 전체적인 소매와 지퍼 상태가 매우 우수하며 정밀 검수 결과 정품으로 판명되었습니다.</p>
-          <div className="rep-foot">
-            <span>시장 평균 시세</span>
-            <strong>{formatPrice(itemData.currentMarketPrice)}</strong>
-          </div>
-        </section>
-
-        <button className="btn-kakao" onClick={shareKakao}>
-          <span className="icon">💬</span> 카카오톡 공유하기
-        </button>
-
-        <div className="logs">
-          {logs.map((L, i) => <div key={i} className="L">● {L}</div>)}
+           <GlassSection title="실시간 입찰하기">
+              <div className="bid-group">
+                 <input 
+                    type="text" 
+                    placeholder="입찰가를 입력하세요" 
+                    value={userBidAmt} 
+                    onChange={(e) => setUserBidAmt(e.target.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ","))} 
+                 />
+                 <button className="btn-bid-submit" onClick={handleBid}>입찰하기</button>
+              </div>
+              <div className="bid-history-mini">
+                 {bidHistory.slice(0, 3).map((h, i) => (
+                   <div key={i} className="history-row">
+                      <span className="user">{h.bidder}</span>
+                      <span className="price">{formatPrice(h.price)}</span>
+                      <span className="time">{h.time}</span>
+                   </div>
+                 ))}
+              </div>
+           </GlassSection>
         </div>
+
+        {/* Page 3: AI Deep Report & Market Analysis */}
+        <section className="deep-analysis">
+           <GlassSection title="AI 정밀 감정 리포트">
+              <div className="report-container">
+                 <div className="ai-icon">🦾</div>
+                 <p className="report-p">{itemData.aiAnalysisText}</p>
+                 <div className="market-comparative">
+                    <div className="comp-item">
+                       <span className="l">희망 시작가</span>
+                       <span className="v">{formatPrice(itemData.recommendedStartPrice)}</span>
+                    </div>
+                    <div className="comp-item highlight">
+                       <span className="l">예상 시장 시세</span>
+                       <span className="v">{formatPrice(itemData.currentMarketPrice)}</span>
+                    </div>
+                 </div>
+              </div>
+           </GlassSection>
+
+           <GlassSection title="실시간 서버 로그">
+              <div className="log-panel">
+                 {logs.map((log, i) => <div key={i} className="log-entry">● {log}</div>)}
+              </div>
+           </GlassSection>
+        </section>
+
+        {/* CTA Section */}
+        <section className="cta-footer">
+           <button className="btn-kakao-invite" onClick={shareKakao}>
+              <span className="k-icon">💬</span> 카카오톡으로 친구 초대하기
+           </button>
+           <p className="footer-notice">본 경매는 AI 감정 모델에 기반한 보조 정보를 제공합니다.</p>
+        </section>
       </main>
+
+      <footer className="final-footer">
+         <p>© 2026 AUCTION MARKET - PREMIUM AI SERVICE</p>
+      </footer>
     </div>
   );
 }
