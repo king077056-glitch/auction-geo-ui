@@ -24,9 +24,8 @@
 }
 
 body {
-  background: linear-gradient(160deg, #1e293b 0%, #312e81 40%, #4c1d95 100%);
-  background-attachment: fixed;
-  color: var(--text-main);
+  background: #ffffff;
+  color: #1e293b;
   font-family: 'Noto Sans KR', sans-serif;
   min-height: 100vh;
   display: flex;
@@ -36,16 +35,12 @@ body {
   overflow-x: hidden;
 }
 
-.mobile-container,
-.mobile-container * {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+.mobile-container {
+  /* 텍스트 쉐도우 제거로 화이트 테마 가독성 향상 */
 }
 
 .theme-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+  display: none; /* 화이트 테마에서는 배경 연출 제거 */
 }
 
 #root {
@@ -66,19 +61,19 @@ body {
   flex-direction: column;
   gap: 20px;
   position: relative;
+  background: #ffffff; /* 모바일 컨테이너 배경도 화이트로 */
 }
 
-/* ===== Glassmorphism 프리미엄 스타일 ===== */
+/* ===== Glassmorphism 프리미엄 스타일 (화이트 테마) ===== */
 .glass-card {
-  background: var(--card-bg);
+  background: #ffffff;
   border-radius: 24px;
   padding: 24px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(226, 232, 240, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: #ffffff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  color: #1e293b;
 }
 
 .glass-card .label,
@@ -87,19 +82,15 @@ body {
 .glass-card .product-title,
 .glass-card .stat-value,
 .glass-card .stat-label,
-.glass-card .ai-message,
 .glass-card .history-user,
 .glass-card .history-price,
 .glass-card .history-time,
-.glass-card .slogan-main { color: #ffffff; }
+.glass-card .slogan-main { color: #1e293b; }
 
 .glass-premium {
-  background: rgba(30, 41, 59, 0.9);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 0 0 1px var(--glass-dark);
+  background: #ffffff;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
 .main-header {
@@ -132,12 +123,12 @@ body {
 .product-image-container {
   width: 100%;
   aspect-ratio: 4/3;
-  background: var(--glass-dark);
+  background: #f8fafc;
   border-radius: 16px;
   overflow: hidden;
   position: relative;
   margin-bottom: 16px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid #e2e8f0;
   cursor: pointer;
 }
 
@@ -161,6 +152,50 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.swipe-wrapper {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.swipe-wrapper:active {
+  cursor: grabbing;
+}
+
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  opacity: 0.6;
+}
+
+.nav-btn:hover {
+  opacity: 1;
+  background: rgba(99, 102, 241, 0.6);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.nav-btn.prev { left: 10px; }
+.nav-btn.next { right: 10px; }
+
+.nav-icon {
+  font-size: 18px;
+  line-height: 1;
 }
 
 .image-thumbnails {
@@ -228,6 +263,7 @@ body {
   margin-bottom: 12px;
   line-height: 1.3;
   letter-spacing: -0.5px;
+  word-break: keep-all; /* 단어 단위 줄바꿈 방지 */
 }
 
 .grade-section {
@@ -267,7 +303,7 @@ body {
 
 .label {
   font-size: 11px;
-  color: var(--text-muted);
+  color: #64748b;
   font-weight: 700;
   margin-bottom: 6px;
   display: block;
@@ -289,12 +325,13 @@ body {
 .ai-message {
   font-size: 14px;
   line-height: 1.6;
-  color: #475569;
-  background: rgba(248, 250, 252, 0.9);
+  color: #1e293b; /* 가독성을 위한 짙은 네이비 블랙 */
+  background: rgba(241, 245, 249, 0.5);
   padding: 16px;
   border-radius: 16px;
   margin-bottom: 16px;
-  border: 1px solid rgba(241, 245, 249, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  word-break: keep-all; /* 단어 단위 줄바꿈 유지 */
 }
 
 .market-stat {
@@ -381,14 +418,15 @@ body {
 
 .input-bid {
   flex: 1;
-  border: 2px solid rgba(226, 232, 240, 0.9);
+  border: 2px solid #e2e2e2;
   border-radius: 12px;
   padding: 0 16px;
   font-size: 16px;
   font-weight: 600;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
-  background: rgba(255, 255, 255, 0.9);
+  background: #f8fafc;
+  color: #1e293b;
 }
 
 .input-bid:focus {
@@ -418,11 +456,11 @@ body {
 }
 
 .history-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 80px 1fr 80px; /* 금액이 중앙에 오도록 레이아웃 조정 */
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px dashed rgba(241, 245, 249, 0.9);
+  border-bottom: 1px dashed #e2e8f0;
 }
 
 .history-item:last-child {
@@ -432,17 +470,23 @@ body {
 .history-user {
   font-size: 13px;
   font-weight: 600;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-price {
   font-size: 14px;
   font-weight: 800;
   color: var(--primary);
+  text-align: center; /* 금액 중앙으로 고정 */
 }
 
 .history-time {
   font-size: 11px;
   color: var(--text-muted);
+  text-align: right;
 }
 
 .header-actions {
@@ -576,36 +620,43 @@ body {
 
 /* CTA 카드 (하이테크 스타일) */
 .cta-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(49, 46, 129, 0.85) 100%);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(49, 46, 129, 1) 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .cta-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
 
 .cta-icon {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--primary);
 }
 
 .cta-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.5px;
+  word-break: keep-all;
 }
 
 .cta-text {
   font-size: 14px;
   line-height: 1.6;
-  color: #ffffff;
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  word-break: keep-all;
 }
 
 /* Lightbox */
