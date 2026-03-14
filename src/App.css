@@ -36,7 +36,8 @@ body {
   overflow-x: hidden;
 }
 
-body, .mobile-container, .main-header, .glass-card * {
+.mobile-container,
+.mobile-container * {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
