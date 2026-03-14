@@ -1,0 +1,7 @@
+[
+  { "platform": "KREAM", "desc": "한정판 및 브랜드 프리미엄 시세", "avgPrice": 95000, "status": "연동완료" },
+  { "platform": "중고나라", "desc": "전국 단위 매물량 및 평균가", "avgPrice": 82000, "status": "연동완료" },
+  { "platform": "번개장터", "desc": "트렌디 매물 및 실거래가", "avgPrice": 78000, "status": "연동완료" },
+  { "platform": "당근마켓", "desc": "지역 기반 직거래 매칭 시세", "avgPrice": 75000, "status": "연동완료" },
+  { "platform": "옥션/지마켓", "desc": "리퍼브 및 신품 병행수입 시세", "avgPrice": 89000, "status": "연동완료" }
+]

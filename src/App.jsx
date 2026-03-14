@@ -81,6 +81,17 @@ const getStars = (grade) => {
   return '⭐';
 };
 
+const getGradeLabel = (grade) => {
+  const g = (grade || 'C').charAt(0).toUpperCase();
+  if (g === 'A') return '신품급 (Near Mint)';
+  if (g === 'B') return '우수 (Very Good)';
+  if (g === 'C') return '보통 (Good)';
+  if (g === 'D') return '하급 (Poor)';
+  return '분석 중';
+};
+
+const GRADE_COLORS = { A: '#10b981', B: '#8b5cf6', C: '#f59e0b', D: '#64748b' };
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -117,6 +128,7 @@ function App() {
   const [timeLeft, setTimeLeft] = useState(3600);
   const [isProcessing, setIsProcessing] = useState(false);
   const [bidHistory, setBidHistory] = useState([]);
+  const [platformPrices, setPlatformPrices] = useState([]);
   const [userBidAmt, setUserBidAmt] = useState('');
   const [logs, setLogs] = useState([
     '시스템: 경매지오 하이퍼 오토메이션 엔진 가동',
@@ -232,6 +244,13 @@ function App() {
     const interval = setInterval(syncEngine, 2000);
     return () => clearInterval(interval);
   }, [syncEngine]);
+
+  useEffect(() => {
+    fetch('./data/platform_prices.json')
+      .then((res) => res.json())
+      .then((data) => setPlatformPrices(data))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0)), 1000);
@@ -407,8 +426,15 @@ function App() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <span className="grade-tag">
-                {isAnalyzing ? displayGrade : itemData.grade} 등급
+              <span
+                className="grade-tag"
+                style={{
+                  backgroundColor: `${GRADE_COLORS[isAnalyzing ? displayGrade : itemData.grade] || GRADE_COLORS.C}22`,
+                  borderColor: GRADE_COLORS[isAnalyzing ? displayGrade : itemData.grade] || GRADE_COLORS.C,
+                  color: GRADE_COLORS[isAnalyzing ? displayGrade : itemData.grade] || GRADE_COLORS.C,
+                }}
+              >
+                {isAnalyzing ? displayGrade : itemData.grade} 등급 · {getGradeLabel(isAnalyzing ? displayGrade : itemData.grade)}
               </span>
               <span className="star-rating">{getStars(isAnalyzing ? displayGrade : itemData.grade)}</span>
             </motion.div>
@@ -486,9 +512,28 @@ function App() {
               <span className="stat-label">AI 추천 경매 시작가</span>
               <span className="stat-value">{formatPrice(itemData.recommendedStartPrice)}</span>
             </div>
-            <div className="market-stat">
-              <span className="stat-label">분석 데이터 출처</span>
-              <span className="stat-value">5대 플랫폼 실시간 연동 (KREAM 외 4곳)</span>
+            <div className="platform-section">
+              <span className="stat-label">5대 플랫폼 시세 (AI 감정 엔진 수집)</span>
+              {platformPrices.length > 0 ? (
+                <div className="platform-grid">
+                  {platformPrices.map((p, i) => (
+                    <motion.div
+                      key={i}
+                      className="platform-item"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <span className="platform-name">{p.platform}</span>
+                      <span className="platform-desc">{p.desc}</span>
+                      <span className="platform-price">{formatPrice(p.avgPrice)}</span>
+                      <span className="platform-status">{p.status}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <span className="stat-value">5대 플랫폼 실시간 연동 (KREAM, 중고나라, 번개장터, 당근마켓, 옥션)</span>
+              )}
             </div>
           </motion.section>
 
@@ -553,8 +598,8 @@ function App() {
                   {(itemData.images && itemData.images.length > 0) || uploadedImageUrl ? (
                     <AnimatePresence mode="wait">
                       <motion.img
-                        key={itemData.images[selectedImage]}
-                        src={itemData.images[selectedImage]}
+                        key={uploadedImageUrl || itemData.images?.[selectedImage]}
+                        src={uploadedImageUrl || itemData.images?.[selectedImage]}
                         alt={itemData.itemName}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
