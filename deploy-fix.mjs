@@ -15,7 +15,14 @@ console.log('🛠️ Bypassing non-ASCII hostname issue...');
 // Path to Vercel CLI entry point
 const vercelPath = path.join(__dirname, 'node_modules', 'vercel', 'dist', 'vc.js');
 
-// Import and run Vercel CLI
-import(pathToFileURL(vercelPath).href).catch(err => {
+// 실행 안정화( deploy 모드 강제 + await import ):
+const cliArgs = process.argv.slice(2);
+const hasDeployWord = cliArgs.includes('deploy') || cliArgs.includes('--prod') || cliArgs.includes('--production');
+process.argv = [process.argv[0], 'vercel', ...(hasDeployWord ? cliArgs : ['deploy', ...cliArgs])];
+
+try {
+  await import(pathToFileURL(vercelPath).href);
+} catch (err) {
   console.error('❌ Failed to load Vercel CLI:', err);
-});
+  process.exitCode = 1;
+}

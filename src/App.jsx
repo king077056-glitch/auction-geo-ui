@@ -19,6 +19,27 @@ const formatPrice = (price) => {
   return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW', maximumFractionDigits: 0 }).format(numericPrice || 0);
 };
 
+// 결제 상태 UI 피드백 (예: ?paymentStatus=PAID)
+const PAYMENT_STATUS_CONFIG = {
+  PENDING: { label: '결제 대기', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.18)' },
+  PAID: { label: '결제 완료', color: '#6366f1', bg: 'rgba(99, 102, 241, 0.18)' },
+  DELIVERED: { label: '납품 완료', color: '#10b981', bg: 'rgba(16, 185, 129, 0.18)' },
+};
+
+const getPaymentStatusFromQuery = () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw =
+      params.get('paymentStatus') ||
+      params.get('payment') ||
+      params.get('status') ||
+      '';
+    const upper = String(raw).toUpperCase().trim();
+    if (Object.prototype.hasOwnProperty.call(PAYMENT_STATUS_CONFIG, upper)) return upper;
+  } catch (_) {}
+  return 'PENDING';
+};
+
 // 샘플 이미지 리스트
 const SAMPLE_IMAGES = [
   '/data/adidas_front.jpg',
@@ -64,6 +85,7 @@ function App() {
   const [userBidAmt, setUserBidAmt] = useState('');
   const [logs, setLogs] = useState(['시스템: 경매장터 AI 엔진 정상 가동 중']);
   const fileInputRef = useRef(null);
+  const [paymentStatus, setPaymentStatus] = useState(getPaymentStatusFromQuery());
 
   // 카카오톡 초기화
   useEffect(() => {
@@ -197,6 +219,19 @@ function App() {
                  <div className="star-row">
                     {GRADE_CONFIG[itemData.grade].stars}
                     <span className="grade-txt">{GRADE_CONFIG[itemData.grade].label}</span>
+                 </div>
+
+                 {/* 결제 상태 시각 피드백 */}
+                 <div className="payment-status-row">
+                   <span
+                     className="payment-badge"
+                     style={{
+                       color: PAYMENT_STATUS_CONFIG[paymentStatus].color,
+                       background: PAYMENT_STATUS_CONFIG[paymentStatus].bg,
+                     }}
+                   >
+                     {paymentStatus} · {PAYMENT_STATUS_CONFIG[paymentStatus].label}
+                   </span>
                  </div>
               </div>
            </GlassSection>
