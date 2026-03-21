@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 
 // ===== AI 감정 및 시세 로직 =====
-const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY || '';
-const DEPLOY_URL = 'https://auction-geo-ui.vercel.app'; 
+const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY || window.__KAKAO_JS_KEY__ || '';
+const DEPLOY_URL = window.__KAKAO_DEPLOY_URL__ || import.meta.env.VITE_DEPLOY_URL || 'https://auction-geo-ui.vercel.app'; 
 
 const GRADE_CONFIG = {
   A: { label: '신품급 (Near Mint)', stars: '⭐⭐⭐⭐⭐', color: '#10b981', basePrice: 120000, desc: '사용감이 거의 없는 최상급 상태' },
@@ -87,28 +87,120 @@ function App() {
   const fileInputRef = useRef(null);
   const [paymentStatus, setPaymentStatus] = useState(getPaymentStatusFromQuery());
 
-  // 카카오톡 초기화
+  // 실시간 데이터 폴링 (마스터 엔진이 current_item.json, bid_history.json에 쓰는 데이터 구독)
   useEffect(() => {
-    if (window.Kakao && !window.Kakao.isInitialized() && KAKAO_JS_KEY) {
-      window.Kakao.init(KAKAO_JS_KEY);
-    }
+    const poll = async () => {
+      try {
+        const [itemRes, bidRes] = await Promise.all([
+          fetch('/data/current_item.json', { cache: 'no-store' }),
+          fetch('/data/bid_history.json', { cache: 'no-store' }),
+        ]);
+        if (itemRes.ok) {
+          const data = await itemRes.json();
+          setItemData((prev) => ({
+            ...prev,
+            itemName: data.itemName ?? prev.itemName,
+            grade: data.grade ?? prev.grade,
+            currentMarketPrice: data.currentMarketPrice ?? prev.currentMarketPrice,
+            recommendedStartPrice: data.recommendedStartPrice ?? prev.recommendedStartPrice,
+            aiAnalysisText: data.aiAnalysisText ?? prev.aiAnalysisText,
+            images: data.imagePath ? [data.imagePath, ...SAMPLE_IMAGES] : prev.images,
+          }));
+          if (data.grade) setDisplayGrade(data.grade);
+          if (data.currentBid != null) setCurrentBid(Number(data.currentBid));
+        }
+        if (bidRes.ok) {
+          const history = await bidRes.json();
+          if (Array.isArray(history) && history.length > 0) {
+            setBidHistory(
+              history.map((h) => ({
+                bidder: h.bidder,
+                price: h.price,
+                time: h.time || '—',
+              }))
+            );
+            const top = history[0];
+            if (top?.price) setCurrentBid(Number(top.price));
+          }
+        }
+      } catch (_) {
+        // 로컬 dev 시 파일 없을 수 있음 - 무시
+      }
+    };
+    poll();
+    const id = setInterval(poll, 2500);
+    return () => clearInterval(id);
   }, []);
 
-  const shareKakao = () => {
-    if (!window.Kakao) return alert('카카오 SDK 로드 중...');
+  // 카카오톡 초기화 (SDK 로드 후 init)
+  useEffect(() => {
+    const initKakao = () => {
+      if (typeof window === 'undefined' || !window.Kakao) return;
+      if (window.Kakao.isInitialized?.()) return;
+      if (!KAKAO_JS_KEY) return;
+      try {
+        window.Kakao.init(KAKAO_JS_KEY);
+      } catch (e) {
+        console.warn('[Kakao] init 실패:', e);
+      }
+    };
+    if (window.Kakao) {
+      initKakao();
+    } else {
+      window.addEventListener('load', initKakao);
+      return () => window.removeEventListener('load', initKakao);
+    }
+  }, [KAKAO_JS_KEY]);
+
+  const shareKakao = async () => {
+    if (typeof window === 'undefined' || !window.Kakao) {
+      alert('카카오 SDK가 로드되지 않았습니다. 페이지를 새로고침 후 다시 시도해주세요.');
+      return;
+    }
+    if (!KAKAO_JS_KEY) {
+      alert('카카오 JavaScript 키가 설정되지 않았습니다.\nVercel 환경변수에 VITE_KAKAO_JS_KEY를 추가해주세요.');
+      return;
+    }
+    if (!window.Kakao.isInitialized?.()) {
+      try {
+        window.Kakao.init(KAKAO_JS_KEY);
+      } catch (e) {
+        alert('카카오 SDK 초기화에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+    }
+    const imageUrl = SAMPLE_IMAGES[0].startsWith('http')
+      ? SAMPLE_IMAGES[0]
+      : `${window.location.origin}${SAMPLE_IMAGES[0]}`;
     try {
-      window.Kakao.Share.sendDefault({
+      await window.Kakao.Share.sendDefault({
         objectType: 'feed',
         content: {
           title: '🎁 [경매장터] 대표님의 특별한 초대',
           description: 'AI가 감정하는 프리미엄 미공개 경매 플랫폼! 지금 입찰해보세요.',
-          imageUrl: window.location.origin + SAMPLE_IMAGES[0],
-          link: { mobileWebUrl: DEPLOY_URL, webUrl: DEPLOY_URL },
+          imageUrl,
+          link: {
+            mobileWebUrl: DEPLOY_URL,
+            webUrl: DEPLOY_URL,
+          },
         },
-        buttons: [{ title: '입찰하러 가기', link: { mobileWebUrl: DEPLOY_URL, webUrl: DEPLOY_URL } }],
+        buttons: [
+          {
+            title: '입찰하러 가기',
+            link: {
+              mobileWebUrl: DEPLOY_URL,
+              webUrl: DEPLOY_URL,
+            },
+          },
+        ],
       });
     } catch (e) {
-      alert('카카오 공유 중 오류가 발생했습니다.');
+      const msg = String(e?.message || e);
+      if (msg.includes('domain') || msg.includes('도메인')) {
+        alert('카카오 개발자 콘솔에 Vercel 도메인을 등록해주세요.\n자세한 방법은 KAKAO_도메인등록_가이드.md를 참고하세요.');
+      } else {
+        alert(`카카오 공유 중 오류: ${msg}`);
+      }
     }
   };
 

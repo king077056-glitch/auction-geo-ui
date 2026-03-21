@@ -9,8 +9,11 @@
     <meta property="og:description" content="AI가 감정하고 시세를 분석해주는 스마트 경매 플랫폼! 지금 바로 확인해보세요." />
     <meta property="og:image" content="https://auction-geo-ui.vercel.app/data/adidas_front.jpg" />
     <meta property="og:url" content="https://auction-geo-ui.vercel.app" />
-    <!-- 카카오톡 JS SDK -->
+    <!-- 카카오톡 JS SDK (도메인 등록 필수: developers.kakao.com) -->
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
+    <script>
+      window.__KAKAO_DEPLOY_URL__ = 'https://auction-geo-ui.vercel.app';
+    </script>
   </head>
   <body>
     <div id="root"></div>
